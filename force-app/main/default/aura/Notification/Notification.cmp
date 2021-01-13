@@ -1,0 +1,42 @@
+<aura:component implements="forceCommunity:availableForAllPageTypes,forceCommunity:themeLayout" access="global" controller="TPCP_BroacastMessageDisplay">
+	<aura:attribute name="isNotificationOpen" type="boolean" default="false"/>
+        <aura:attribute name="AlertMessageList"  type="List" default="[]"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />  
+    
+    <button class="slds-button slds-button_icon slds-button_icon-small slds-float_right slds-popover__close" title="Close dialog">
+  					<lightning:icon iconName ="utility:notification" size="xx-small" onclick="{! c.closeModel }"/>
+                        <span class="slds-assistive-text">1 new notifications</span>
+	</button>
+        <!--	<span aria-hidden="true" class="slds-notification-badge slds-incoming-notification slds-show-notification">3</span> -->
+		
+        
+
+             <section aria-describedby="dialog-body-id-7" aria-labelledby="dialog-heading-id-7" class=" slds-float_right slds-popover__close" role="dialog" >
+        <div>
+        <header class="slds-popover__header">
+			<h2 class="slds-text-heading_small" id="dialog-heading-id-7">Notifications</h2>
+		</header>
+		<div class="slds-popover__body slds-p-around_none" id="dialog-body-id-7">
+			<ul class="slds-global-actions">
+				<li class="slds-global-header__notification slds-global-header__notification_unread">
+					<div class="slds-media slds-has-flexi-truncate slds-p-around_x-small">
+						<div class="slds-media__body">
+							<div class="slds-grid slds-grid_align-spread">
+								<h3 class="slds-truncate">
+									<strong>
+                                        <aura:iteration items="{!v.AlertMessageList}" var="item">
+                                            <p>{!item}</p><br/>
+   										 </aura:iteration>
+									</strong>
+								</h3>
+						</div>
+					</div>
+				</div>
+			</li>
+		</ul>
+	</div>
+ </div>
+</section>
+
+	
+</aura:component>

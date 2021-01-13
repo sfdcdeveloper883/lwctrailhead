@@ -1,0 +1,45 @@
+<template>
+    <template if:true={showBoatRecordCreatorModal}>
+        <section role="dialog" tabindex="-1" aria-label="New Boat Record Modal" aria-modal="true"
+            aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close">
+                        <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+                            <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#close"></use>
+                        </svg>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">New Boat</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <h3 class="slds-section__title slds-theme--shade">
+                        <span class="slds-p-horizontal--small slds-truncate">Information</span>
+                    </h3>
+                    <lightning-record-edit-form object-api-name="Boat__c" id="createBoatForm"
+                        onsuccess={handleCreatedBoat}>
+                        <div>
+                            <lightning-messages></lightning-messages>
+                            <lightning-input-field field-name="Name" class="slds-m-top_large">
+                            </lightning-input-field>
+                            <lightning-input-field field-name="BoatType__c" value={boatType} class="slds-m-top_medium">
+                            </lightning-input-field>
+                            <lightning-input-field field-name="Contact__c"
+                                class="slds-m-top_medium slds-m-bottom_large">
+                            </lightning-input-field>
+                        </div>
+                    </lightning-record-edit-form>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="brand-variant" label="Cancel" title="Cancel" onclick={handleCancel}>
+                    </lightning-button>
+                    <lightning-button class="slds-p-horizontal_x-small" variant="brand" label="Save"
+                        onclick={submitForm}>
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>
