@@ -1,36 +1,49 @@
 #!groovy
 import groovy.json.JsonSlurperClassic
-node
-{
-   def SF_CONSUMER_KEY='3MVG9SemV5D80oBcnvp.8CVjFSZsYXFOO5ZSxZPo_eIgsVFAeW.GKAW60IElPX92EBcyuZmSILsQp3WRsdMCc'
-    def SF_USERNAME='absidhartha-sgkg@force.com'
-    def SERVER_KEY_CREDENTIALS_ID='F59458678AAA4B5DA0E427E11A68D4F042ECB6147C83AD2FD695EB6AC1E913E7'
-    def DEPLOYDIR='src'
-    def TEST_LEVEL='RunLocalTests'
-    def SF_INSTANCE_URL = "https://login.salesforce.com"
-    def toolbelt = tool 'sfdx'
+node {
 
+    def BUILD_NUMBER=env.BUILD_NUMBER
+    def RUN_ARTIFACT_DIR="tests/${BUILD_NUMBER}"
+    def SFDC_USERNAME
 
-    // -------------------------------------------------------------------------
-    // Check out code from source control.
-    // -------------------------------------------------------------------------
+    def HUB_ORG=env.HUB_ORG_DH
+    def SFDC_HOST = env.SFDC_HOST_DH
+    def JWT_KEY_CRED_ID = env.JWT_CRED_ID_DH
+    def CONNECTED_APP_CONSUMER_KEY=env.CONNECTED_APP_CONSUMER_KEY_DH
+
+    println 'KEY IS' 
+    println JWT_KEY_CRED_ID
+    println HUB_ORG
+    println SFDC_HOST
+    println CONNECTED_APP_CONSUMER_KEY
+    def toolbelt = tool 'toolbelt'
 
     stage('checkout source') {
+        // when running in multi-branch job, one must issue this command
         checkout scm
     }
-    
-    
-    // -------------------------------------------------------------------------
-    // Run all the enclosed stages with access to the Salesforce
-    // JWT key credentials.
-    // -------------------------------------------------------------------------
 
-    stage('Push To Test Org') {
-        rc = bat returnStatus: true, script: "\"${toolbelt}\" force:src:push --all --username ${SF_USERNAME} -y debug"
-        //rc = bat returnStatus: true, script: "\"${toolbelt}\" force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile \"${jwt_key_file}\" --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
-        if (rc != 0) {
-            error 'push all failed'
+    withCredentials([file(credentialsId: JWT_KEY_CRED_ID, variable: 'jwt_key_file')]) {
+        stage('Deploye Code') {
+            if (isUnix()) {
+                rc = sh returnStatus: true, script: "${toolbelt} force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile ${jwt_key_file} --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
+            }else{
+                 rc = bat returnStatus: true, script: "\"${toolbelt}\" force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile \"${jwt_key_file}\" --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
+            }
+            if (rc != 0) { error 'hub org authorization failed' }
+
+			println rc
+			
+			// need to pull out assigned username
+			if (isUnix()) {
+				rmsg = sh returnStdout: true, script: "${toolbelt} force:mdapi:deploy -d manifest/. -u ${HUB_ORG}"
+			}else{
+			   rmsg = bat returnStdout: true, script: "\"${toolbelt}\" force:mdapi:deploy -d manifest/. -u ${HUB_ORG}"
+			}
+			  
+            printf rmsg
+            println('Hello from a Job DSL script!')
+            println(rmsg)
         }
     }
-    
 }
