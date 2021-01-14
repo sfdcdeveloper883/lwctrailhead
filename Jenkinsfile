@@ -1,3 +1,5 @@
+#!groovy
+import groovy.json.JsonSlurperClassic
 node
 {
    def SF_CONSUMER_KEY='3MVG9SemV5D80oBcnvp.8CVjFSZsYXFOO5ZSxZPo_eIgsVFAeW.GKAW60IElPX92EBcyuZmSILsQp3WRsdMCc'
