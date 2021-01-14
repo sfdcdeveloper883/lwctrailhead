@@ -6,6 +6,7 @@ node
     def DEPLOYDIR='src'
     def TEST_LEVEL='RunLocalTests'
     def SF_INSTANCE_URL = "https://login.salesforce.com"
+    def toolbelt = tool 'toolbelt'
 
 
     // -------------------------------------------------------------------------
