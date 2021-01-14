@@ -26,7 +26,8 @@ node
     // -------------------------------------------------------------------------
 
     stage('Push To Test Org') {
-        rc = bat returnStatus: true, script: "${toolbelt}/sfdx force:src:push --all --username ${SF_USERNAME} -y debug"
+        rc = bat returnStatus: true, script: "\"${toolbelt}\" force:src:push --all --username ${SF_USERNAME} -y debug"
+        //rc = bat returnStatus: true, script: "\"${toolbelt}\" force:auth:jwt:grant --clientid ${CONNECTED_APP_CONSUMER_KEY} --username ${HUB_ORG} --jwtkeyfile \"${jwt_key_file}\" --setdefaultdevhubusername --instanceurl ${SFDC_HOST}"
         if (rc != 0) {
             error 'push all failed'
         }
