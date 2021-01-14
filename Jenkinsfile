@@ -17,4 +17,17 @@ node
         checkout scm
     }
     
+    
+    // -------------------------------------------------------------------------
+    // Run all the enclosed stages with access to the Salesforce
+    // JWT key credentials.
+    // -------------------------------------------------------------------------
+
+    stage('Push To Test Org') {
+        rc = sh returnStatus: true, script: "${toolbelt}/sfdx force:src:push --all --username ${SF_USERNAME} -y debug"
+        if (rc != 0) {
+            error 'push all failed'
+        }
+    }
+    
 }
