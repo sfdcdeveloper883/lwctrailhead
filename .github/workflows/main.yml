@@ -1,35 +1,78 @@
-#..github/workflows/main.yml
-name: githubactioncicd
-on: 
-  # Trigger the workflow on push or pull request,
-  # but only for the main branch
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+name: sfdx-template on push
+
+on: [pull_request]
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    name: Retrieve code and check into repository
+    container: salesforce/salesforcedx
     steps:
-    - uses: actions/checkout@main
-      if: github.event.action == 'opened' || github.event.action == 'synchronize'
-    - uses: actions/setup-node@v1
-      with:
-        node-version: '10.x'
-
-    - name: Install Salesforce CLI
-      run: |
-        npm install sfdx-cli
-        node_modules/sfdx-cli/bin/run --version
-        node_modules/sfdx-cli/bin/run plugins --core
+      - name: "Update container version of git"
+        run: |
+           apt-get update && apt-get install software-properties-common -y && apt-add-repository ppa:git-core/ppa && apt-get update && apt-get install -y git
+          
+      - name: "Add Accenture Powerkit Plugin"
+        run: echo 'y' | sfdx plugins:install sfpowerkit
       
+      - name: "Checkout code"
+        uses: actions/checkout@main
+        
     - name: Authenticate DevHub
       run: |
         echo "${SALESFORCE_JWT_SECRET_KEY}" > server.key
         node_modules/sfdx-cli/bin/run force:auth:jwt:grant --clientid ${{ secrets.SALESFORCE_CONSUMER_KEY }} --jwtkeyfile server.key --username ${{ secrets.SALESFORCE_DEVHUB_USERNAME}} --instanceurl https://login.salesforce.com --setdefaultdevhubusername
-      env:
-        SALESFORCE_JWT_SECRET_KEY: ${{ secrets.SALESFORCE_JWT_SECRET_KEY }}
-    - name: Deploy source
-      run: node_modules/sfdx-cli/bin/run force:source:deploy -x ./manifest/package.xml
+        
+      - name: Set Default SFDX target org
+        run: sfdx force:config:set defaultusername=checkout
+        
+      - name: Make reports directory
+        run: mkdir -p ./reports
+
+      - name: Run Apex PMD Static (Code Analyzer)
+        run: |
+          touch ./reports/pmd.json
+          sfdx sfpowerkit:source:pmd -d ./force-app/main/default -r category/apex/design.xml -f json -o ./reports/pmd.json || true
+       
+      - name: Run Code Coverage
+        run: |
+          sfdx force:apex:test:run -c -u checkout -r json > ./reports/codecoverage.json || true
+          
+      - name: Run Health Check
+        run: | 
+          sfdx sfpowerkit:org:healthcheck --json > ./reports/healthcheck.json    
+         
+      # Cache node_modules to speed up the process
+      - name: Restore node_modules cache
+        id: cache-npm
+        uses: actions/cache@v1
+        with:
+          path: node_modules
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-${{ env.cache-name }}-
+            npm-
+      # Install npm dependencies for Prettier and Jest
+      - name: 'Install npm dependencies'
+        if: steps.cache-npm.outputs.cache-hit != 'true'
+        run: npm install
+
+      # Prettier formatting
+      - name: 'Code formatting verification with Prettier'
+        run: npm run prettier --write --check || true
+
+      # Commit prettified files if they differ from repo
+      - name: Commit prettified files (if any)
+        run: |
+          git add .
+          git commit -m "Generated reports and Prettified code" || true
+      - name: Push reports and prettified changes
+        uses: ad-m/github-push-action@master
+        with:
+         github_token: ${{ secrets.GITHUB_TOKEN }}
+         
+      - name: Push changes to Salesforce
+        run: sfdx force:source:deploy -x ./manifest/package.xml
+          #sfdx force:source:convert -d ./metadata
+          #sfdx force:source:deploy -d ./metadata -u checkout
+          #rm -rf ./metadata
