@@ -9,7 +9,7 @@ jobs:
     container: salesforce/salesforcedx
     steps:
       - name: "Update container version of git"
-        run: |
+        run:
            apt-get update && apt-get install software-properties-common -y && apt-add-repository ppa:git-core/ppa && apt-get update && apt-get install -y git
           
       - name: "Add Accenture Powerkit Plugin"
@@ -18,10 +18,10 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@main
         
-    - name: Authenticate DevHub
-      run: |
-        echo "${SALESFORCE_JWT_SECRET_KEY}" > server.key
-        node_modules/sfdx-cli/bin/run force:auth:jwt:grant --clientid ${{ secrets.SALESFORCE_CONSUMER_KEY }} --jwtkeyfile server.key --username ${{ secrets.SALESFORCE_DEVHUB_USERNAME}} --instanceurl https://login.salesforce.com --setdefaultdevhubusername
+      - name: Authenticate DevHub
+        run:
+          echo "${SALESFORCE_JWT_SECRET_KEY}" > server.key
+          node_modules/sfdx-cli/bin/run force:auth:jwt:grant --clientid ${{ secrets.SALESFORCE_CONSUMER_KEY }} --jwtkeyfile server.key --username ${{ secrets.SALESFORCE_DEVHUB_USERNAME}} --instanceurl https://login.salesforce.com --setdefaultdevhubusername
         
       - name: Set Default SFDX target org
         run: sfdx force:config:set defaultusername=checkout
@@ -30,16 +30,16 @@ jobs:
         run: mkdir -p ./reports
 
       - name: Run Apex PMD Static (Code Analyzer)
-        run: |
+        run:
           touch ./reports/pmd.json
           sfdx sfpowerkit:source:pmd -d ./force-app/main/default -r category/apex/design.xml -f json -o ./reports/pmd.json || true
        
       - name: Run Code Coverage
-        run: |
+        run:
           sfdx force:apex:test:run -c -u checkout -r json > ./reports/codecoverage.json || true
           
       - name: Run Health Check
-        run: | 
+        run:
           sfdx sfpowerkit:org:healthcheck --json > ./reports/healthcheck.json    
          
       # Cache node_modules to speed up the process
@@ -49,7 +49,7 @@ jobs:
         with:
           path: node_modules
           key: npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
+          restore-keys:
             npm-${{ env.cache-name }}-
             npm-
       # Install npm dependencies for Prettier and Jest
@@ -63,7 +63,7 @@ jobs:
 
       # Commit prettified files if they differ from repo
       - name: Commit prettified files (if any)
-        run: |
+        run:
           git add .
           git commit -m "Generated reports and Prettified code" || true
       - name: Push reports and prettified changes
