@@ -32,4 +32,4 @@ jobs:
       env:
         SALESFORCE_JWT_SECRET_KEY: ${{ secrets.SALESFORCE_JWT_SECRET_KEY }}
     - name: Deploy source
-      run: node_modules/sfdx-cli/bin/run force:source:deploy -u ciorg
+      run: node_modules/sfdx-cli/bin/run force:source:deploy -x manifest/package.xml
