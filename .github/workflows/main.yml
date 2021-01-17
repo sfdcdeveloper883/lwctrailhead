@@ -21,7 +21,9 @@ jobs:
               uses: tiagonnascimento/sfdx-orgdev-build-deploy@v1.1
               with:
                 type: 'production'
-                certificate_path: certificates/server.key
+                certificate_path: certificates/server.key.enc
+                decryption_key: ${{ secrets.DECRYPTION_KEY }}
+                decryption_iv: ${{ secrets.DECRYPTION_IV }}
                 client_id: ${{ secrets.SALESFORCE_CONSUMER_KEY }}
                 username: ${{ secrets.SALESFORCE_DEVHUB_USERNAME }}
                 checkonly: true
