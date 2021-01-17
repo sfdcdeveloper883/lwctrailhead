@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@main
+    - uses: actions/checkout@master
       if: github.event.action == 'opened' || github.event.action == 'synchronize'
     - uses: actions/setup-node@v1
       with:
