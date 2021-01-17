@@ -1,22 +1,35 @@
-name: Org Deployment CI
-
-on:
+#..github/workflows/main.yml
+name: githubactioncicd
+on: 
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
   push:
-    branches: [ master ]
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Authorizing Org
-      uses: forcedotcom/salesforcedx-actions@master
+    - uses: actions/checkout@main
+      if: github.event.action == 'opened' || github.event.action == 'synchronize'
+    - uses: actions/setup-node@v1
       with:
-          args: force:auth:jwt:grant --clientid ${{ secrets.SALESFORCE_CONSUMER_KEY }} --jwtkeyfile certificates/server.key --username ${{ secrets.SALESFORCE_DEVHUB_USERNAME }} --setdefaultusername
-    - name: Deploying Metadata
-      uses: forcedotcom/salesforcedx-actions@master
-      with:
-          args: force:source:convert --rootdir=force-app --outputdir=convert
-    - name: Deploying Metadata
-      uses: forcedotcom/salesforcedx-actions@master
-      with:
-          args: force:source:deploy --manifest manifest/package.xml
+        node-version: '10.x'
+
+    - name: Install Salesforce CLI
+      run:
+        npm install sfdx-cli
+        node_modules/sfdx-cli/bin/run --version
+        node_modules/sfdx-cli/bin/run plugins --core
+      
+    - name: Authenticate DevHub
+      run:
+        echo "${SALESFORCE_JWT_SECRET_KEY}" > server.key
+        node_modules/sfdx-cli/bin/run force:auth:jwt:grant --clientid ${{ secrets.SALESFORCE_CONSUMER_KEY }} --jwtkeyfile server.key --username ${{ secrets.SALESFORCE_DEVHUB_USERNAME}} --instanceurl https://login.salesforce.com --setdefaultdevhubusername
+      env:
+        SALESFORCE_JWT_SECRET_KEY: ${{ secrets.SALESFORCE_JWT_SECRET_KEY }}
+    - name: Deploy source
+      run: node_modules/sfdx-cli/bin/run force:source:deploy --manifest ./manifest/package.xml
