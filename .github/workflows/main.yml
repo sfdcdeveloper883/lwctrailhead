@@ -1,14 +1,7 @@
-#..github/workflows/main.yml
-name: githubactioncicd
-on: 
-  # Trigger the workflow on push or pull request,
-  # but only for the main branch
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+#.github/workflows/main.yml
+name: Scratch org for review
+on: pull_request
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,17 +13,23 @@ jobs:
         node-version: '10.x'
 
     - name: Install Salesforce CLI
-      run:
+      run: |
         npm install sfdx-cli
         node_modules/sfdx-cli/bin/run --version
         node_modules/sfdx-cli/bin/run plugins --core
       
     - name: Authenticate DevHub
-      run:
+      run: |
         echo "${SALESFORCE_JWT_SECRET_KEY}" > server.key
-        node_modules/sfdx-cli/bin/run force:auth:jwt:grant --clientid ${{ secrets.SALESFORCE_CONSUMER_KEY }} --jwtkeyfile server.key --username ${{ secrets.SALESFORCE_DEVHUB_USERNAME}} --instanceurl https://login.salesforce.com --setdefaultdevhubusername
+        node_modules/sfdx-cli/bin/run force:auth:jwt:grant --clientid ${{ secrets.SALESFORCE_CONSUMER_KEY }} --jwtkeyfile server.key --username ${{ secrets.SALESFORCE_DEVHUB_USERNAME}} --setdefaultdevhubusername -a devhub
       env:
         SALESFORCE_JWT_SECRET_KEY: ${{ secrets.SALESFORCE_JWT_SECRET_KEY }}
+      
+    - name: Define CI org
+      run: node_modules/sfdx-cli/bin/run force:org:create -v devhub -s -f config/project-scratch-def.json -a ciorg -d 1
+
+    - name: Deploy source
+      run: node_modules/sfdx-cli/bin/run force:source:push -u ciorg
+
     - name: Run Apex test
-      run:
-        node_modules/sfdx-cli/bin/run force:apex:test:run -c -r human
+      run: node_modules/sfdx-cli/bin/run force:apex:test:run -c -r human
