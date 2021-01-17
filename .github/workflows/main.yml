@@ -1,0 +1,29 @@
+#..github/workflows/main.yml
+name: githubactioncicd
+on: 
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+      if: github.event.action == 'opened' || github.event.action == 'synchronize'
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '10.x'
+      
+    - name: Authenticate DevHub
+      uses: forcedotcom/salesforcedx-actions@master
+      with:
+         args: force:auth:jwt:grant --clientid ${{ secrets.SALESFORCE_CONSUMER_KEY }} --jwtkeyfile ${{ secrets.SALESFORCE_JWT_SECRET_KEY }} --username ${{ secrets.SALESFORCE_DEVHUB_USERNAME}} --instanceurl https://login.salesforce.com --setdefaultdevhubusername
+    - name: Deploying Metadata
+      uses: forcedotcom/salesforcedx-actions@master
+      with:
+          args: force:source:deploy --manifest manifest/package.xml
