@@ -32,6 +32,6 @@ jobs:
       env:
         SALESFORCE_JWT_SECRET_KEY: ${{ secrets.SALESFORCE_JWT_SECRET_KEY }}
     - name: Deploying Metadata
-      uses: forcedotcom/salesforcedx-actions@master
+      uses: forcedotcom/salesforcedx-actions@main
       with:
           args: force:source:deploy --manifest manifest/package.xml
