@@ -8,9 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Decrypting Server Key
-      shell: bash
-      run: openssl enc -nosalt -aes-256-cbc -d -in certificates/server.key.enc -out certificates/server.key -base64 -K ${{ secrets.RAHUL_FORCE_DECRYPTION_KEY }} -iv ${{ secrets.RAHUL_FORCE_DECRYPTION_IV }}
     - name: Authorizing Org
       uses: forcedotcom/salesforcedx-actions@master
       with:
