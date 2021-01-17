@@ -15,4 +15,8 @@ jobs:
     - name: Deploying Metadata
       uses: forcedotcom/salesforcedx-actions@master
       with:
-          args: force:source:deploy --manifest manifest/package.xml
+          args: force:source:convert --rootdir=force-app --outputdir=convert
+    - name: Deploying Metadata
+      uses: forcedotcom/salesforcedx-actions@master
+      with:
+          args: force:source:deploy --deploydir=convert --manifest manifest/package.xml
