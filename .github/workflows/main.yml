@@ -18,21 +18,20 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: '10.x'
-    # Install Salesforce CLI
+
     - name: Install Salesforce CLI
-      run:
-        wget https://developer.salesforce.com/media/salesforce-cli/sfdx-linux-amd64.tar.xz
-        mkdir sfdx-cli
-        tar xJf sfdx-linux-amd64.tar.xz -C sfdx-cli --strip-components 1
-        ./sfdx-cli/install
-           
+      run: |
+        npm install sfdx-cli
+        node_modules/sfdx-cli/bin/run --version
+        node_modules/sfdx-cli/bin/run plugins --core
+      
     - name: Authenticate DevHub
-      run:
+      run: |
         echo "${SALESFORCE_JWT_SECRET_KEY}" > server.key
-       sfdx force:auth:jwt:grant --clientid ${{ secrets.SALESFORCE_CONSUMER_KEY }} --jwtkeyfile server.key --username ${{ secrets.SALESFORCE_DEVHUB_USERNAME}} --instanceurl https://login.salesforce.com --setdefaultdevhubusername --setalias=hub-org
+        node_modules/sfdx-cli/bin/run force:auth:jwt:grant --clientid ${{ secrets.SALESFORCE_CONSUMER_KEY }} --jwtkeyfile server.key --username ${{ secrets.SALESFORCE_DEVHUB_USERNAME}} --instanceurl https://login.salesforce.com --setdefaultdevhubusername
       env:
         SALESFORCE_JWT_SECRET_KEY: ${{ secrets.SALESFORCE_JWT_SECRET_KEY }}
-    - name: 'Convert Metadata'
-      run: sfdx force:source:convert --rootdir=force-app --outputdir=convert
-    - name: 'Run Test on Metadata'
-      run: sfdx force:mdapi:deploy --deploydir=convert --testlevel=RunLocalTests --checkonly -u hub-org
+    - name: Deploying Metadata
+      uses: forcedotcom/salesforcedx-actions@master
+      with:
+          args: force:source:deploy --manifest manifest/package.xml
